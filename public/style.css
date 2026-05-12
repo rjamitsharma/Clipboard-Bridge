@@ -42,7 +42,7 @@ body {
 
 .hero-logo {
   display: block;
-  width: clamp(64px, 20vw, 180px);
+  width: clamp(48px, 12vw, 100px);
   height: auto;
   margin-bottom: 10px;
   border-radius: 14px;
