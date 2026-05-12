@@ -33,20 +33,6 @@ const sessions = new Map();
 app.use(express.json({ limit: '100mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use((req, res, next) => {
-  const originalSend = res.send.bind(res);
-  res.send = function (body) {
-    if (typeof body === 'string' && res.get('Content-Type')?.includes('text/html')) {
-      body = body
-        .replace(/(href|src)="\/([^"?]*\.(css|js|png|ico|svg))/g, `$1="/$2?v=${STATIC_VERSION}`)
-        .replace(/(href|src)="\/fav\.png"/g, `$1="/fav.png?v=${STATIC_VERSION}`);
-    }
-    return originalSend(body);
-  };
-  next();
-});
-app.use('/vendor', express.static(path.join(__dirname, 'node_modules')));
-
 app.get('/api/session', (req, res) => {
   const id = uuidv4().slice(0, 8).toUpperCase();
   sessions.set(id, {
