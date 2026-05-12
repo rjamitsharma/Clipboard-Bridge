@@ -189,6 +189,16 @@ io.on('connection', (socket) => {
     socket.to(sessionId).emit('relay:file-chunk', chunk);
   });
 
+  socket.on('history:request', ({ sessionId }) => {
+    if (!sessionId) return;
+    socket.to(sessionId).emit('history:request', { from: socket.id });
+  });
+
+  socket.on('history:sync', ({ sessionId, messages }) => {
+    if (!sessionId) return;
+    socket.to(sessionId).emit('history:sync', { messages });
+  });
+
   socket.on('disconnect', () => {
     const { sessionId } = socket.data;
     if (!sessionId || !sessions.has(sessionId)) {

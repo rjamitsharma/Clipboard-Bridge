@@ -5,6 +5,7 @@ let scanner = null;
 let selectedMedia = null;
 const outgoingTransfers = new Map();
 const incomingTransfers = new Map();
+const filePayloads = new Map();
 const messageLog = [];
 
 const STORAGE_KEY = 'cb_state';
@@ -83,6 +84,7 @@ const els = {
   scanBtn: document.getElementById('scanBtn'),
   reader: document.getElementById('reader'),
   statusLine: document.getElementById('statusLine'),
+  statusDot: document.getElementById('statusDot'),
   backBtn: document.getElementById('backBtn'),
   chatMessages: document.getElementById('chatMessages'),
   textInput: document.getElementById('textInput'),
@@ -106,7 +108,11 @@ function setView(view) {
 }
 
 function setStatusLine(text) {
-  els.statusLine.textContent = text;
+  els.statusLine.childNodes[0].textContent = text + ' ';
+}
+
+function setDot(color) {
+  els.statusDot.className = `status-dot ${color}`;
 }
 
 function addSystemMessage(text) {
@@ -143,7 +149,11 @@ function addTextMessage(text, direction) {
   saveStoredState();
 }
 
-function addFileMessage(name, type, base64, direction) {
+function addFileMessage(name, type, base64, direction, id) {
+  if (id && base64) {
+    filePayloads.set(id, base64);
+  }
+
   const bytes = base64ToUint8(base64);
   const blob = new Blob([bytes], { type: type || 'application/octet-stream' });
   const url = URL.createObjectURL(blob);
@@ -197,8 +207,17 @@ function addFileMessage(name, type, base64, direction) {
   els.chatMessages.appendChild(div);
   els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
 
-  messageLog.push({ type: 'file', name, fileType: type, direction, size: base64.length });
+  messageLog.push({ type: 'file', name, fileType: type, direction, size: base64.length, id });
   saveStoredState();
+}
+
+function finalizeIncomingFile(id) {
+  const transfer = incomingTransfers.get(id);
+  if (!transfer || transfer.phase !== 'ready') return false;
+  const base64 = transfer.chunks.join('');
+  filePayloads.set(id, base64);
+  addFileMessage(transfer.name, transfer.type, base64, 'in', id);
+  return true;
 }
 
 function addTransferCard({ direction, id, name, type, size, previewDataUrl, statusText, onDownload }) {
@@ -429,11 +448,11 @@ function formatBytes(value) {
 }
 
 socket.on('connect', () => {
-  setStatusLine('Connected to server.');
+  setStatusLine('Connected to server');
 });
 
 socket.on('disconnect', () => {
-  setStatusLine('Disconnected from server.');
+  setStatusLine('Disconnected from server');
 });
 
 els.showCreateBtn.addEventListener('click', async () => {
@@ -469,7 +488,8 @@ els.showCreateBtn.addEventListener('click', async () => {
   els.qrBox.appendChild(img);
 
   joinSession(sessionId, { openChat: false, announce: false });
-  setStatusLine('Session created. Waiting for peer...');
+  setStatusLine('Session created');
+  setDot('red');
 });
 
 els.showJoinBtn.addEventListener('click', () => {
@@ -644,6 +664,7 @@ els.backBtn.addEventListener('click', async () => {
   sessionId = null;
   outgoingTransfers.clear();
   incomingTransfers.clear();
+  filePayloads.clear();
   els.chatMessages.innerHTML = '';
   els.sessionCode.textContent = '-';
   els.chatSessionCode.textContent = '-';
@@ -714,7 +735,8 @@ async function joinSession(code, options = {}) {
     }
 
     if (!resp.peers.length) {
-      setStatusLine('Session ready. Waiting for peer...');
+      setStatusLine('Session ready');
+      setDot('red');
       return;
     }
 
@@ -723,7 +745,12 @@ async function joinSession(code, options = {}) {
       addSystemMessage(`Connected to session ${sessionId}`);
     }
 
-    setStatusLine('Peer connected.');
+    setStatusLine('Peer connected');
+    setDot('green');
+
+    if (messageLog.length > 0) {
+      socket.emit('history:request', { sessionId });
+    }
   });
 }
 
@@ -733,22 +760,25 @@ socket.on('peer:joined', () => {
     addSystemMessage(`Connected to session ${sessionId}`);
   }
   addSystemMessage('Peer connected');
-  setStatusLine('Peer connected.');
+  setStatusLine('Peer connected');
+  setDot('green');
 });
 
 socket.on('peer:left', () => {
   outgoingTransfers.clear();
   incomingTransfers.clear();
+  filePayloads.clear();
   addSystemMessage('Peer left the session');
-  setStatusLine('Peer disconnected. Waiting for reconnection...');
+  setStatusLine('Peer disconnected');
+  setDot('red');
 });
 
 socket.on('relay:text', ({ text }) => {
   addTextMessage(text, 'in');
 });
 
-socket.on('relay:file', ({ name, type, payload }) => {
-  addFileMessage(name, type, payload, 'in');
+socket.on('relay:file', ({ name, type, payload, id: fileId }) => {
+  addFileMessage(name, type, payload, 'in', fileId || generateId());
 });
 
 socket.on('relay:file-offer', (offer) => {
@@ -809,6 +839,7 @@ socket.on('relay:file-chunk', (chunk) => {
     transfer.dom.statusEl.textContent = 'Download ready';
     transfer.dom.downloadBtn.disabled = false;
     setMiniIcon(transfer.dom.downloadBtn, 'save', 'Save file');
+    finalizeIncomingFile(chunk.id);
   }
 });
 
@@ -843,6 +874,7 @@ async function streamOutgoingTransfer(transfer) {
   const { id, file, dom } = transfer;
   const buffer = await file.arrayBuffer();
   const base64 = arrayBufferToBase64(buffer);
+  filePayloads.set(id, base64);
   const chunkSize = 32000;
   const total = Math.ceil(base64.length / chunkSize);
 
@@ -859,6 +891,27 @@ async function streamOutgoingTransfer(transfer) {
   }
 
   dom.statusEl.textContent = 'Upload complete';
+  messageLog.push({
+    type: 'file', name: transfer.name, fileType: transfer.type,
+    direction: 'out', size: base64.length, id
+  });
+  saveStoredState();
+}
+
+async function getFileBase64(entry) {
+  if (!entry?.id) return null;
+  const cached = filePayloads.get(entry.id);
+  if (cached) return cached;
+  const outgoing = outgoingTransfers.get(entry.id);
+  if (outgoing?.file) {
+    const buf = await outgoing.file.arrayBuffer();
+    return arrayBufferToBase64(buf);
+  }
+  const incoming = incomingTransfers.get(entry.id);
+  if (incoming?.phase === 'ready' && incoming.chunks?.length) {
+    return incoming.chunks.join('');
+  }
+  return null;
 }
 
 function saveIncomingTransfer(transfer) {
@@ -869,6 +922,38 @@ function saveIncomingTransfer(transfer) {
   const url = URL.createObjectURL(blob);
   downloadByUrl(url, transfer.name || 'file');
 }
+
+socket.on('history:request', async ({ from }) => {
+  const entries = [];
+  for (const entry of messageLog) {
+    if (entry.type !== 'file') {
+      entries.push(entry);
+      continue;
+    }
+    const payload = await getFileBase64(entry);
+    if (payload) {
+      entries.push({ ...entry, payload });
+    } else {
+      entries.push({ ...entry, unavailable: true });
+    }
+  }
+  socket.emit('history:sync', { sessionId, messages: entries });
+});
+
+socket.on('history:sync', ({ messages }) => {
+  els.chatMessages.innerHTML = '';
+  messageLog.length = 0;
+  for (const entry of messages) {
+    if (entry.type === 'system') {
+      addSystemMessage(entry.text);
+    } else if (entry.type === 'text') {
+      addTextMessage(entry.text, entry.direction);
+    } else if (entry.type === 'file') {
+      addFileMessage(entry.name, entry.fileType, entry.payload || '', entry.direction, entry.id);
+    }
+  }
+  saveStoredState();
+});
 
 async function buildPreviewDataUrl(file) {
   const type = String(file?.type || '').toLowerCase();
@@ -1121,7 +1206,8 @@ if (code) {
     updateUrl(code);
     setView('chat');
     restoreMessages();
-    setStatusLine('Reconnecting to session...');
+    setStatusLine('Reconnecting');
+    setDot('red');
     joinSession(code, { announce: false });
   } else {
     sessionId = code;
