@@ -1090,21 +1090,27 @@ function restoreMessages() {
 
 const params = new URLSearchParams(location.search);
 const codeFromUrl = params.get('session');
-if (codeFromUrl) {
-  els.joinCode.value = codeFromUrl.toUpperCase();
-  els.joinPanel.classList.remove('hidden');
-  els.createPanel.classList.add('hidden');
-  joinSession(codeFromUrl.toUpperCase());
-} else {
-  const stored = loadStoredState();
-  if (stored) {
+const stored = loadStoredState();
+const code = (codeFromUrl || stored?.sessionId || '').toUpperCase();
+
+if (code) {
+  if (codeFromUrl) {
+    els.joinCode.value = code;
+    els.joinPanel.classList.remove('hidden');
+    els.createPanel.classList.add('hidden');
+  }
+
+  if (stored && stored.sessionId === code) {
     messageLog.push(...(stored.messages || []));
-    sessionId = stored.sessionId;
-    els.chatSessionCode.textContent = sessionId;
-    updateUrl(sessionId);
+    sessionId = code;
+    els.chatSessionCode.textContent = code;
+    updateUrl(code);
     setView('chat');
     restoreMessages();
     setStatusLine('Reconnecting to session...');
-    joinSession(sessionId, { announce: false });
+    joinSession(code, { announce: false });
+  } else {
+    sessionId = code;
+    joinSession(code);
   }
 }
