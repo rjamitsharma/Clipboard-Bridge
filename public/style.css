@@ -61,13 +61,14 @@ body {
   }
 }
 
-@media (max-width: 760px) {
-  .app-shell {
-    padding: 0;
-  }
-  #chatView.active .app-shell {
-    padding: 0;
-  }
+#chatView.active {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  background: var(--bg);
+}
 
 .hero-logo {
   display: block;
@@ -454,25 +455,3 @@ button.ghost.composer-btn {
   font-weight: 600;
 }
 
-@media (max-width: 760px) {
-  .app-shell {
-    padding: 10px;
-  }
-
-  .action-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .chat-messages {
-    min-height: 62vh;
-    max-height: 62vh;
-  }
-
-  .chat-composer {
-    grid-template-columns: 1fr auto;
-  }
-
-  #attachBtn {
-    grid-column: 1;
-  }
-}
