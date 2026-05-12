@@ -40,6 +40,12 @@ body {
   display: block;
 }
 
+.hero-logo {
+  display: block;
+  margin-bottom: 10px;
+  border-radius: 14px;
+}
+
 .hero h1 {
   margin: 0;
   font-size: clamp(28px, 5vw, 44px);
