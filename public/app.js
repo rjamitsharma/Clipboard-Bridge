@@ -5,6 +5,39 @@ let scanner = null;
 let selectedMedia = null;
 const outgoingTransfers = new Map();
 const incomingTransfers = new Map();
+const messageLog = [];
+
+const STORAGE_KEY = 'cb_state';
+
+function loadStoredState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const state = JSON.parse(raw);
+    if (!state?.sessionId) return null;
+    return state;
+  } catch (_e) {
+    return null;
+  }
+}
+
+function saveStoredState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      sessionId,
+      messages: messageLog
+    }));
+  } catch (_e) {
+    // localStorage full or unavailable
+  }
+}
+
+function clearStoredState() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (_e) { /* noop */ }
+  messageLog.length = 0;
+}
 
 function generateId() {
   if (typeof crypto.randomUUID === 'function') {
@@ -67,6 +100,9 @@ function addSystemMessage(text) {
   div.textContent = text;
   els.chatMessages.appendChild(div);
   els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+
+  messageLog.push({ type: 'system', text });
+  saveStoredState();
 }
 
 function addTextMessage(text, direction) {
@@ -87,6 +123,9 @@ function addTextMessage(text, direction) {
   div.appendChild(actions);
   els.chatMessages.appendChild(div);
   els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+
+  messageLog.push({ type: 'text', text, direction });
+  saveStoredState();
 }
 
 function addFileMessage(name, type, base64, direction) {
@@ -142,6 +181,9 @@ function addFileMessage(name, type, base64, direction) {
 
   els.chatMessages.appendChild(div);
   els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+
+  messageLog.push({ type: 'file', name, fileType: type, direction, size: base64.length });
+  saveStoredState();
 }
 
 function addTransferCard({ direction, id, name, type, size, previewDataUrl, statusText, onDownload }) {
@@ -387,6 +429,7 @@ els.showCreateBtn.addEventListener('click', async () => {
   const data = await res.json();
   sessionId = data.id;
   els.sessionCode.textContent = sessionId;
+  saveStoredState();
 
   const url = `${location.origin}?session=${sessionId}&join=1`;
 
@@ -574,6 +617,7 @@ els.backBtn.addEventListener('click', async () => {
   els.chatMessages.innerHTML = '';
   els.sessionCode.textContent = '-';
   els.chatSessionCode.textContent = '-';
+  clearStoredState();
   setView('home');
 });
 
@@ -609,12 +653,19 @@ async function joinSession(code, options = {}) {
   const { openChat = true, announce = true } = options;
   socket.emit('session:join', code, async (resp) => {
     if (!resp?.ok) {
+      if (els.chatView.classList.contains('active')) {
+        clearStoredState();
+        sessionId = null;
+        els.chatMessages.innerHTML = '';
+        setView('home');
+      }
       alert(resp?.error || 'Could not join session.');
       return;
     }
 
     sessionId = code.toUpperCase();
     els.chatSessionCode.textContent = sessionId;
+    saveStoredState();
 
     if (openChat) {
       setView('chat');
@@ -973,6 +1024,45 @@ function base64ToUint8(base64) {
   return out;
 }
 
+function restoreMessages() {
+  for (const entry of messageLog) {
+    if (entry.type === 'system') {
+      const div = document.createElement('div');
+      div.className = 'msg system';
+      div.textContent = entry.text;
+      els.chatMessages.appendChild(div);
+    } else if (entry.type === 'text') {
+      const div = document.createElement('div');
+      div.className = `msg ${entry.direction}`;
+
+      const textBlock = document.createElement('div');
+      textBlock.className = 'msg-text';
+      appendLinkedText(textBlock, entry.text);
+
+      const actions = document.createElement('div');
+      actions.className = 'msg-actions';
+      actions.appendChild(createMiniIconButton('copy', 'Copy text', async () => {
+        await copyText(entry.text);
+      }));
+
+      div.appendChild(textBlock);
+      div.appendChild(actions);
+      els.chatMessages.appendChild(div);
+    } else if (entry.type === 'file') {
+      const div = document.createElement('div');
+      div.className = `msg ${entry.direction}`;
+
+      const caption = document.createElement('div');
+      caption.className = 'msg-caption';
+      caption.textContent = `${entry.name} (file)`;
+      div.appendChild(caption);
+
+      els.chatMessages.appendChild(div);
+    }
+  }
+  els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+}
+
 const params = new URLSearchParams(location.search);
 const codeFromUrl = params.get('session');
 if (codeFromUrl) {
@@ -980,4 +1070,15 @@ if (codeFromUrl) {
   els.joinPanel.classList.remove('hidden');
   els.createPanel.classList.add('hidden');
   joinSession(codeFromUrl.toUpperCase());
+} else {
+  const stored = loadStoredState();
+  if (stored) {
+    messageLog.push(...(stored.messages || []));
+    sessionId = stored.sessionId;
+    els.chatSessionCode.textContent = sessionId;
+    setView('chat');
+    restoreMessages();
+    setStatusLine('Reconnecting to session...');
+    joinSession(sessionId, { announce: false });
+  }
 }
