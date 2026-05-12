@@ -124,6 +124,8 @@ io.on('connection', (socket) => {
       return;
     }
 
+    session.sockets = session.sockets.filter((id) => io.sockets.sockets.has(id));
+
     if (session.sockets.length >= 2 && !session.sockets.includes(socket.id)) {
       ack?.({ ok: false, error: 'Session already has two devices.' });
       return;
