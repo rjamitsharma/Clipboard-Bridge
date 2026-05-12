@@ -39,6 +39,13 @@ function clearStoredState() {
   messageLog.length = 0;
 }
 
+function updateUrl(code) {
+  try {
+    const url = code ? `${location.origin}?session=${code}` : location.origin;
+    history.replaceState({ session: code }, '', url);
+  } catch (_e) { /* noop */ }
+}
+
 function generateId() {
   if (typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -430,6 +437,7 @@ els.showCreateBtn.addEventListener('click', async () => {
   sessionId = data.id;
   els.sessionCode.textContent = sessionId;
   saveStoredState();
+  updateUrl(sessionId);
 
   const url = `${location.origin}?session=${sessionId}&join=1`;
 
@@ -618,6 +626,7 @@ els.backBtn.addEventListener('click', async () => {
   els.sessionCode.textContent = '-';
   els.chatSessionCode.textContent = '-';
   clearStoredState();
+  updateUrl(null);
   setView('home');
 });
 
@@ -655,6 +664,7 @@ async function joinSession(code, options = {}) {
     if (!resp?.ok) {
       if (els.chatView.classList.contains('active')) {
         clearStoredState();
+        updateUrl(null);
         sessionId = null;
         els.chatMessages.innerHTML = '';
         setView('home');
@@ -666,6 +676,7 @@ async function joinSession(code, options = {}) {
     sessionId = code.toUpperCase();
     els.chatSessionCode.textContent = sessionId;
     saveStoredState();
+    updateUrl(sessionId);
 
     if (openChat) {
       setView('chat');
@@ -1076,6 +1087,7 @@ if (codeFromUrl) {
     messageLog.push(...(stored.messages || []));
     sessionId = stored.sessionId;
     els.chatSessionCode.textContent = sessionId;
+    updateUrl(sessionId);
     setView('chat');
     restoreMessages();
     setStatusLine('Reconnecting to session...');
