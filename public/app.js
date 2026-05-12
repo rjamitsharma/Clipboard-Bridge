@@ -8,6 +8,7 @@ const incomingTransfers = new Map();
 const messageLog = [];
 
 const STORAGE_KEY = 'cb_state';
+const STORAGE_TTL = 60000;
 
 function loadStoredState() {
   try {
@@ -15,6 +16,10 @@ function loadStoredState() {
     if (!raw) return null;
     const state = JSON.parse(raw);
     if (!state?.sessionId) return null;
+    if (Date.now() - state.timestamp > STORAGE_TTL) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
     return state;
   } catch (_e) {
     return null;
@@ -25,7 +30,8 @@ function saveStoredState() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       sessionId,
-      messages: messageLog
+      messages: messageLog,
+      timestamp: Date.now()
     }));
   } catch (_e) {
     // localStorage full or unavailable
