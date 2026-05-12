@@ -6,6 +6,21 @@ let selectedMedia = null;
 const outgoingTransfers = new Map();
 const incomingTransfers = new Map();
 
+function generateId() {
+  if (typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  const arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  arr[6] = (arr[6] & 0x0f) | 0x40;
+  arr[8] = (arr[8] & 0x3f) | 0x80;
+  const hex = [];
+  for (let i = 0; i < 16; i++) {
+    hex.push(arr[i].toString(16).padStart(2, '0'));
+  }
+  return `${hex.slice(0, 4).join('')}-${hex.slice(4, 6).join('')}-${hex.slice(6, 8).join('')}-${hex.slice(8, 10).join('')}-${hex.slice(10).join('')}`;
+}
+
 const els = {
   homeView: document.getElementById('homeView'),
   chatView: document.getElementById('chatView'),
@@ -465,7 +480,7 @@ els.fileInput.addEventListener('change', async () => {
 async function processOutgoingFile(file) {
   if (!file || !sessionId) return;
 
-  const id = crypto.randomUUID();
+  const id = generateId();
   const type = file.type || 'application/octet-stream';
   const previewDataUrl = await buildPreviewDataUrl(file);
   const dom = addTransferCard({
