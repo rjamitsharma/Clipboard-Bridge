@@ -89,6 +89,8 @@ const els = {
   sendBtn: document.getElementById('sendBtn'),
   attachBtn: document.getElementById('attachBtn'),
   fileInput: document.getElementById('fileInput'),
+  cameraBtn: document.getElementById('cameraBtn'),
+  cameraInput: document.getElementById('cameraInput'),
   mediaViewer: document.getElementById('mediaViewer'),
   viewerContent: document.getElementById('viewerContent'),
   viewerCloseBtn: document.getElementById('viewerCloseBtn'),
@@ -524,6 +526,18 @@ els.textInput.addEventListener('keydown', (evt) => {
 
 els.attachBtn.addEventListener('click', () => {
   els.fileInput.click();
+});
+
+els.cameraBtn.addEventListener('click', () => {
+  els.cameraInput.click();
+});
+
+els.cameraInput.addEventListener('change', async () => {
+  const file = els.cameraInput.files[0];
+  if (file) {
+    await processOutgoingFile(file);
+  }
+  els.cameraInput.value = '';
 });
 
 els.fileInput.addEventListener('change', async () => {

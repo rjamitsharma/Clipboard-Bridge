@@ -41,6 +41,34 @@ body {
   position: relative;
 }
 
+#chatView {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    padding: 10px;
+  }
+
+  .action-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (pointer: coarse) {
+  .chat-composer {
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    padding: 0;
+  }
+  #chatView.active .app-shell {
+    padding: 0;
+  }
+
 .hero-logo {
   display: block;
   width: 100%;
@@ -162,10 +190,10 @@ button.small {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-radius: 16px 16px 0 0;
+  flex-shrink: 0;
   background: var(--header);
   color: #fff;
-  padding: 14px;
+  padding: 12px 16px;
 }
 
 .chat-header h2 {
@@ -180,12 +208,10 @@ button.small {
 }
 
 .chat-messages {
-  min-height: 55vh;
-  max-height: 60vh;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 18px;
-  border: 1px solid var(--line);
-  border-top: none;
   background:
     linear-gradient(rgba(239, 234, 226, 0.9), rgba(239, 234, 226, 0.9)),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cpath fill='%23d9d4c9' fill-opacity='.35' d='M17 19h5v5h-5zm0 24h5v5h-5zm0 24h5v5h-5zm0 24h5v5h-5zM41 19h5v5h-5zm0 24h5v5h-5zm0 24h5v5h-5zm0 24h5v5h-5zM65 19h5v5h-5zm0 24h5v5h-5zm0 24h5v5h-5zm0 24h5v5h-5zM89 19h5v5h-5zm0 24h5v5h-5zm0 24h5v5h-5zm0 24h5v5h-5z'/%3E%3C/g%3E%3C/svg%3E");
@@ -306,14 +332,42 @@ button.small {
 }
 
 .chat-composer {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
+  display: flex;
+  align-items: center;
   gap: 8px;
-  border: 1px solid var(--line);
-  border-top: none;
-  border-radius: 0 0 16px 16px;
-  padding: 10px;
+  flex-shrink: 0;
+  padding: 10px 12px;
   background: #f3f0e7;
+}
+
+.chat-composer #textInput {
+  flex: 1;
+  margin: 0;
+}
+
+.composer-btn {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.composer-btn svg {
+  display: block;
+}
+
+button.primary.composer-btn {
+  background: var(--accent);
+  color: #fff;
+}
+
+button.ghost.composer-btn {
+  background: transparent;
+  color: var(--muted);
 }
 
 .hidden {
