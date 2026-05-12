@@ -41,6 +41,12 @@
       </section>
 
       <section id="chatView" class="view">
+        <div id="dropOverlay" class="drop-overlay hidden">
+          <div class="drop-zone">
+            <svg viewBox="0 0 48 48" width="48" height="48"><path d="M24 6v26M14 22l10 10 10-10M6 38h36" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <p class="drop-label">Drop files here</p>
+          </div>
+        </div>
         <header class="chat-header">
           <div>
             <h2>Session <span id="chatSessionCode">-</span></h2>
@@ -53,7 +59,7 @@
 
         <footer class="chat-composer">
           <input id="textInput" type="text" placeholder="Type a message" />
-          <input id="fileInput" type="file" class="hidden" />
+          <input id="fileInput" type="file" class="hidden" multiple />
           <button id="attachBtn" class="ghost">Attach</button>
           <button id="sendBtn" class="primary">Send</button>
         </footer>

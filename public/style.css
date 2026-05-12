@@ -38,6 +38,7 @@ body {
 
 .view.active {
   display: block;
+  position: relative;
 }
 
 .hero-logo {
@@ -374,6 +375,29 @@ button.small {
   padding: 12px;
   display: grid;
   gap: 8px;
+}
+
+.drop-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 95, 84, 0.12);
+  border: 3px dashed var(--accent);
+  border-radius: 16px;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.drop-zone {
+  text-align: center;
+  color: var(--accent);
+}
+
+.drop-label {
+  margin: 6px 0 0;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 @media (max-width: 760px) {

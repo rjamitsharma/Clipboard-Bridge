@@ -9,6 +9,7 @@ const incomingTransfers = new Map();
 const els = {
   homeView: document.getElementById('homeView'),
   chatView: document.getElementById('chatView'),
+  dropOverlay: document.getElementById('dropOverlay'),
   showCreateBtn: document.getElementById('showCreateBtn'),
   showJoinBtn: document.getElementById('showJoinBtn'),
   createPanel: document.getElementById('createPanel'),
@@ -454,7 +455,14 @@ els.attachBtn.addEventListener('click', () => {
 });
 
 els.fileInput.addEventListener('change', async () => {
-  const file = els.fileInput.files[0];
+  const files = els.fileInput.files;
+  for (const file of files) {
+    await processOutgoingFile(file);
+  }
+  els.fileInput.value = '';
+});
+
+async function processOutgoingFile(file) {
   if (!file || !sessionId) return;
 
   const id = crypto.randomUUID();
@@ -491,9 +499,47 @@ els.fileInput.addEventListener('change', async () => {
       previewDataUrl
     }
   });
+}
 
-  els.fileInput.value = '';
-});
+function setupDragAndDrop() {
+  let dragCounter = 0;
+
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
+    els.chatView.addEventListener(eventName, (evt) => {
+      evt.preventDefault();
+      evt.stopPropagation();
+    });
+  });
+
+  els.chatView.addEventListener('dragenter', () => {
+    dragCounter += 1;
+    if (dragCounter === 1) {
+      els.dropOverlay.classList.remove('hidden');
+    }
+  });
+
+  els.chatView.addEventListener('dragleave', () => {
+    dragCounter -= 1;
+    if (dragCounter <= 0) {
+      dragCounter = 0;
+      els.dropOverlay.classList.add('hidden');
+    }
+  });
+
+  els.chatView.addEventListener('drop', async (evt) => {
+    dragCounter = 0;
+    els.dropOverlay.classList.add('hidden');
+
+    const files = evt.dataTransfer?.files;
+    if (!files || !files.length) return;
+
+    for (const file of files) {
+      await processOutgoingFile(file);
+    }
+  });
+}
+
+setupDragAndDrop();
 
 els.backBtn.addEventListener('click', async () => {
   closeMediaViewer();
