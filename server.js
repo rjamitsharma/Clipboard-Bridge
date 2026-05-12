@@ -1,10 +1,22 @@
 const path = require('path');
+const fs = require('fs');
 const http = require('http');
+const { execSync } = require('child_process');
 const express = require('express');
 const { Server } = require('socket.io');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const QRCode = require('qrcode');
+
+function getVersion() {
+  try {
+    return execSync('git rev-parse --short HEAD', { encoding: 'utf8', cwd: __dirname }).trim();
+  } catch (_e) {
+    return Date.now().toString(36);
+  }
+}
+
+const STATIC_VERSION = getVersion();
 
 const app = express();
 const server = http.createServer(app);
@@ -20,6 +32,19 @@ const sessions = new Map();
 
 app.use(express.json({ limit: '100mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use((req, res, next) => {
+  const originalSend = res.send.bind(res);
+  res.send = function (body) {
+    if (typeof body === 'string' && res.get('Content-Type')?.includes('text/html')) {
+      body = body
+        .replace(/(href|src)="\/([^"?]*\.(css|js|png|ico|svg))/g, `$1="/$2?v=${STATIC_VERSION}`)
+        .replace(/(href|src)="\/fav\.png"/g, `$1="/fav.png?v=${STATIC_VERSION}`);
+    }
+    return originalSend(body);
+  };
+  next();
+});
 app.use('/vendor', express.static(path.join(__dirname, 'node_modules')));
 
 app.get('/api/session', (req, res) => {
