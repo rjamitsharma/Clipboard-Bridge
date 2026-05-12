@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Bridge</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section id="homeView" class="view active">
+        <div class="hero">
+          <h1>Chat Bridge</h1>
+          <p>Start by creating a session or joining one with a unique key.</p>
+        </div>
+
+        <div class="action-grid">
+          <button id="showCreateBtn" class="action-card create">Create Session</button>
+          <button id="showJoinBtn" class="action-card join">Join Session</button>
+        </div>
+
+        <section id="createPanel" class="panel hidden">
+          <h2>New Session</h2>
+          <p>Scan this QR using the camera app.</p>
+          <p><strong>Session Key:</strong> <span id="sessionCode">-</span></p>
+          <div id="qrBox" class="qr-box"></div>
+        </section>
+
+        <section id="joinPanel" class="panel hidden">
+          <h2>Join with Key</h2>
+          <label for="joinCode">Unique Key</label>
+          <input id="joinCode" type="text" placeholder="e.g. A1B2C3D4" />
+          <div class="row">
+            <button id="joinBtn" class="primary">Join Session</button>
+            <button id="scanBtn" class="ghost">Scan QR</button>
+          </div>
+          <div id="reader" class="reader hidden"></div>
+        </section>
+      </section>
+
+      <section id="chatView" class="view">
+        <header class="chat-header">
+          <div>
+            <h2>Session <span id="chatSessionCode">-</span></h2>
+            <p id="statusLine">Waiting for peer...</p>
+          </div>
+          <button id="backBtn" class="ghost small">Leave</button>
+        </header>
+
+        <section id="chatMessages" class="chat-messages"></section>
+
+        <footer class="chat-composer">
+          <input id="textInput" type="text" placeholder="Type a message" />
+          <input id="fileInput" type="file" class="hidden" />
+          <button id="attachBtn" class="ghost">Attach</button>
+          <button id="sendBtn" class="primary">Send</button>
+        </footer>
+      </section>
+    </main>
+
+    <section id="mediaViewer" class="media-viewer hidden">
+      <button id="viewerCloseBtn" class="viewer-close" aria-label="Close viewer">Close</button>
+      <div id="viewerContent" class="viewer-content"></div>
+      <button id="viewerDownloadBtn" class="viewer-download">Download</button>
+    </section>
+
+    <section id="holdMenu" class="hold-menu hidden">
+      <div class="hold-card">
+        <button id="holdDownloadBtn" class="primary">Download</button>
+        <button id="holdCancelBtn" class="ghost">Cancel</button>
+      </div>
+    </section>
+
+    <script src="/vendor/socket.io/client-dist/socket.io.min.js"></script>
+    <script src="/vendor/html5-qrcode/html5-qrcode.min.js" type="text/javascript"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>
