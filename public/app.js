@@ -8,7 +8,7 @@ const incomingTransfers = new Map();
 const messageLog = [];
 
 const STORAGE_KEY = 'cb_state';
-const STORAGE_TTL = 60000;
+const STORAGE_TTL = 300000;
 
 function loadStoredState() {
   try {
@@ -614,6 +614,8 @@ function setupDragAndDrop() {
 setupDragAndDrop();
 
 els.backBtn.addEventListener('click', async () => {
+  if (sessionId && !confirm('Do you want to quit this session?')) return;
+
   closeMediaViewer();
   closeHoldMenu();
 
@@ -661,6 +663,12 @@ document.addEventListener('keydown', (evt) => {
   if (evt.key === 'Escape') {
     closeMediaViewer();
     closeHoldMenu();
+  }
+});
+
+window.addEventListener('beforeunload', (evt) => {
+  if (sessionId) {
+    evt.preventDefault();
   }
 });
 

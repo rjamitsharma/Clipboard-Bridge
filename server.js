@@ -30,6 +30,17 @@ const io = new Server(server, {
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 } });
 const sessions = new Map();
 
+const SESSION_TTL = 10 * 60 * 1000;
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, session] of sessions) {
+    if (session.sockets.length === 0 && now > session.expiresAt) {
+      sessions.delete(id);
+    }
+  }
+}, 120000);
+
 app.use(express.json({ limit: '100mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -38,6 +49,7 @@ app.get('/api/session', (req, res) => {
   sessions.set(id, {
     id,
     createdAt: Date.now(),
+    expiresAt: Date.now() + SESSION_TTL,
     sockets: []
   });
   res.json({ id });
@@ -187,7 +199,7 @@ io.on('connection', (socket) => {
     socket.to(sessionId).emit('peer:left');
 
     if (session.sockets.length === 0) {
-      sessions.delete(sessionId);
+      session.expiresAt = Date.now() + SESSION_TTL;
     }
   });
 });
