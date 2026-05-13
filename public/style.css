@@ -32,7 +32,9 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 10px 16px;
   font-size: 12px;
   color: var(--muted);
@@ -47,7 +49,7 @@ body {
 }
 
 .app-footer a:hover {
-  color: var(--accent);
+  color: #02496e;
 }
 
 .app-footer strong {
