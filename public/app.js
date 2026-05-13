@@ -1,5 +1,9 @@
 const socket = io();
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
 let sessionId = null;
 let scanner = null;
 let selectedMedia = null;

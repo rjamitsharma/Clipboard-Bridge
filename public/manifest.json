@@ -1,0 +1,27 @@
+{
+  "name": "Clipboard Bridge",
+  "short_name": "ClipBridge",
+  "description": "Cross-device clipboard and file sharing with QR pairing",
+  "start_url": "/?source=pwa",
+  "display": "standalone",
+  "background_color": "#efeae2",
+  "theme_color": "#0f5f54",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/fav.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
