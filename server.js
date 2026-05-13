@@ -1,7 +1,6 @@
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
-const { execSync } = require('child_process');
 const express = require('express');
 const { Server } = require('socket.io');
 const multer = require('multer');
@@ -10,13 +9,16 @@ const QRCode = require('qrcode');
 
 function getVersion() {
   try {
-    return execSync('git rev-parse --short HEAD', { encoding: 'utf8', cwd: __dirname }).trim();
+    const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+    const parts = (pkg.version || '1.0.0').split('.');
+    return `${parts[0]}.${parts[1]}`;
   } catch (_e) {
-    return Date.now().toString(36);
+    return '1.0';
   }
 }
 
-const STATIC_VERSION = getVersion();
+const APP_VERSION = getVersion();
+const BUILD_ID = Date.now().toString(36);
 
 const app = express();
 const server = http.createServer(app);
@@ -47,8 +49,8 @@ app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 app.get(['/', '/index.html'], (req, res) => {
   let html = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
   html = html
-    .replace(/(href|src)="\/([^"?]*\.(css|js|png|ico|svg))/g, `$1="/$2?v=${STATIC_VERSION}`)
-    .replace('id="appVersion"></span>', `id="appVersion">v.1.${STATIC_VERSION}</span>`);
+    .replace(/(href|src)="\/([^"?]*\.(css|js|png|ico|svg))/g, `$1="/$2?v=${BUILD_ID}`)
+    .replace('id="appVersion"></span>', `id="appVersion">v.${APP_VERSION}</span>`);
   res.type('html').send(html);
 });
 
