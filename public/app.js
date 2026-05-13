@@ -983,6 +983,15 @@ socket.on('history:sync', ({ messages }) => {
       addTextMessage(entry.text, entry.direction);
     } else if (entry.type === 'file' && entry.payload) {
       addFileMessage(entry.name, entry.fileType, entry.payload, entry.direction, entry.id);
+    } else if (entry.type === 'file') {
+      const div = document.createElement('div');
+      div.className = `msg ${entry.direction}`;
+      const caption = document.createElement('div');
+      caption.className = 'msg-caption';
+      caption.textContent = `${entry.name} (file)`;
+      div.appendChild(caption);
+      els.chatMessages.appendChild(div);
+      messageLog.push({ type: 'file', name: entry.name, fileType: entry.fileType, direction: entry.direction });
     }
   }
   saveStoredState();

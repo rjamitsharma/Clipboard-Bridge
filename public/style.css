@@ -35,6 +35,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 8px;
   padding: 10px 16px;
   font-size: 12px;
   color: var(--muted);
@@ -50,6 +51,11 @@ body {
 
 .app-footer a:hover {
   color: #02496e;
+}
+
+.footer-version {
+  font-size: 10px;
+  opacity: 0.65;
 }
 
 .app-footer strong {

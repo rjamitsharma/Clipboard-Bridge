@@ -48,7 +48,9 @@ app.use((req, res, next) => {
   const originalSend = res.send.bind(res);
   res.send = function (body) {
     if (typeof body === 'string' && res.get('Content-Type')?.includes('text/html')) {
-      body = body.replace(/(href|src)="\/([^"?]*\.(css|js|png|ico|svg))/g, `$1="/$2?v=${STATIC_VERSION}`);
+      body = body
+        .replace(/(href|src)="\/([^"?]*\.(css|js|png|ico|svg))/g, `$1="/$2?v=${STATIC_VERSION}`)
+        .replace('id="appVersion"></span>', `id="appVersion">v.${STATIC_VERSION}</span>`);
     }
     return originalSend(body);
   };
