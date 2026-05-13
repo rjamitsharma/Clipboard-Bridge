@@ -956,13 +956,18 @@ function saveIncomingTransfer(transfer) {
 socket.on('history:request', async ({ from }) => {
   const entries = [];
   for (const entry of messageLog) {
-    if (entry.type !== 'file') {
+    if (entry.type === 'system') {
       entries.push(entry);
+      continue;
+    }
+    const flipped = { ...entry, direction: entry.direction === 'out' ? 'in' : 'out' };
+    if (entry.type !== 'file') {
+      entries.push(flipped);
       continue;
     }
     const payload = await getFileBase64(entry);
     if (payload) {
-      entries.push({ ...entry, payload });
+      entries.push({ ...flipped, payload });
     }
   }
   socket.emit('history:sync', { sessionId, messages: entries });
