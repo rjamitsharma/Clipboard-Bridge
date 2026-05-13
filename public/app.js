@@ -760,7 +760,6 @@ socket.on('peer:joined', () => {
     setView('chat');
     addSystemMessage(`Connected to session ${sessionId}`);
   }
-  addSystemMessage('Peer connected');
   setStatusLine('Peer connected');
   setDot('green');
 });
@@ -775,7 +774,6 @@ socket.on('peer:left', () => {
       transfer.dom.statusEl.textContent = 'Sender disconnected';
     }
   }
-  addSystemMessage('Peer left the session');
   setStatusLine('Peer disconnected');
   setDot('red');
 });
