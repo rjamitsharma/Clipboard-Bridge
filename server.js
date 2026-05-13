@@ -223,5 +223,5 @@ io.on('connection', (socket) => {
 
 const port = Number(process.env.PORT || 3000);
 server.listen(port, '0.0.0.0', () => {
-  console.log(`Clipboard bridge running at http://0.0.0.0:${port}`);
+  console.log(`Quick Chat running at http://0.0.0.0:${port}`);
 });

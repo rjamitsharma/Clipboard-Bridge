@@ -1,4 +1,4 @@
-const CACHE = 'clipboard-bridge-v1';
+const CACHE = 'quick-chat-v1';
 
 self.addEventListener('install', (evt) => {
   evt.waitUntil(

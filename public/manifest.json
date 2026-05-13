@@ -1,6 +1,6 @@
 {
-  "name": "Clipboard Bridge",
-  "short_name": "ClipBridge",
+  "name": "Quick Chat",
+  "short_name": "Quick Chat",
   "description": "Cross-device clipboard and file sharing with QR pairing",
   "start_url": "/?source=pwa",
   "display": "standalone",

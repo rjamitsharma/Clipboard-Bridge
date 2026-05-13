@@ -1,5 +1,5 @@
 {
-  "name": "clipboard-bridge",
+  "name": "quick-chat",
   "version": "1.0.0",
   "description": "Cross-device clipboard and file sharing with QR pairing, LAN-first WebRTC and internet fallback.",
   "main": "server.js",
