@@ -765,9 +765,6 @@ socket.on('peer:joined', () => {
 });
 
 socket.on('peer:left', () => {
-  outgoingTransfers.clear();
-  incomingTransfers.clear();
-  filePayloads.clear();
   addSystemMessage('Peer left the session');
   setStatusLine('Peer disconnected');
   setDot('red');
@@ -933,8 +930,6 @@ socket.on('history:request', async ({ from }) => {
     const payload = await getFileBase64(entry);
     if (payload) {
       entries.push({ ...entry, payload });
-    } else {
-      entries.push({ ...entry, unavailable: true });
     }
   }
   socket.emit('history:sync', { sessionId, messages: entries });
@@ -948,8 +943,8 @@ socket.on('history:sync', ({ messages }) => {
       addSystemMessage(entry.text);
     } else if (entry.type === 'text') {
       addTextMessage(entry.text, entry.direction);
-    } else if (entry.type === 'file') {
-      addFileMessage(entry.name, entry.fileType, entry.payload || '', entry.direction, entry.id);
+    } else if (entry.type === 'file' && entry.payload) {
+      addFileMessage(entry.name, entry.fileType, entry.payload, entry.direction, entry.id);
     }
   }
   saveStoredState();
