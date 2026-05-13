@@ -662,6 +662,7 @@ els.backBtn.addEventListener('click', async () => {
   }
 
   sessionId = null;
+  for (const [, t] of incomingTransfers) { if (t.timeoutId) clearTimeout(t.timeoutId); }
   outgoingTransfers.clear();
   incomingTransfers.clear();
   filePayloads.clear();
@@ -765,6 +766,15 @@ socket.on('peer:joined', () => {
 });
 
 socket.on('peer:left', () => {
+  for (const [id, transfer] of incomingTransfers) {
+    if (transfer.phase === 'offered' || transfer.phase === 'requesting') {
+      if (transfer.timeoutId) clearTimeout(transfer.timeoutId);
+      transfer.phase = 'error';
+      transfer.dom.downloadBtn.disabled = false;
+      setMiniIcon(transfer.dom.downloadBtn, 'download', 'Unavailable');
+      transfer.dom.statusEl.textContent = 'Sender disconnected';
+    }
+  }
   addSystemMessage('Peer left the session');
   setStatusLine('Peer disconnected');
   setDot('red');
@@ -804,8 +814,22 @@ socket.on('relay:file-offer', (offer) => {
 socket.on('relay:file-request', ({ id }) => {
   if (!id) return;
   const transfer = outgoingTransfers.get(id);
-  if (!transfer) return;
+  if (!transfer) {
+    socket.emit('relay:file-error', { sessionId, id });
+    return;
+  }
   streamOutgoingTransfer(transfer);
+});
+
+socket.on('relay:file-error', ({ id }) => {
+  if (!id) return;
+  const transfer = incomingTransfers.get(id);
+  if (!transfer) return;
+  if (transfer.timeoutId) clearTimeout(transfer.timeoutId);
+  transfer.phase = 'error';
+  transfer.dom.downloadBtn.disabled = false;
+  setMiniIcon(transfer.dom.downloadBtn, 'download', 'File unavailable');
+  transfer.dom.statusEl.textContent = 'Sender disconnected before upload';
 });
 
 socket.on('relay:file-start', (meta) => {
@@ -860,11 +884,22 @@ function requestIncomingDownload(id) {
     return;
   }
 
+  if (transfer.phase === 'error') return;
+
   if (transfer.phase !== 'offered') return;
   transfer.phase = 'requesting';
   transfer.dom.downloadBtn.disabled = true;
   transfer.dom.statusEl.textContent = 'Requesting file from sender...';
   socket.emit('relay:file-request', { sessionId, id });
+
+  if (transfer.timeoutId) clearTimeout(transfer.timeoutId);
+  transfer.timeoutId = setTimeout(() => {
+    if (transfer.phase !== 'requesting') return;
+    transfer.phase = 'error';
+    transfer.dom.downloadBtn.disabled = false;
+    setMiniIcon(transfer.dom.downloadBtn, 'download', 'Retry');
+    transfer.dom.statusEl.textContent = 'File request timed out. Sender may be offline.';
+  }, 30000);
 }
 
 async function streamOutgoingTransfer(transfer) {

@@ -175,6 +175,11 @@ io.on('connection', (socket) => {
     socket.to(sessionId).emit('relay:file-request', { id, from: socket.id });
   });
 
+  socket.on('relay:file-error', ({ sessionId, id }) => {
+    if (!sessionId || !id) return;
+    socket.to(sessionId).emit('relay:file-error', { id });
+  });
+
   socket.on('relay:file-start', ({ sessionId, meta }) => {
     if (!sessionId || !meta?.id) {
       return;
