@@ -108,6 +108,7 @@ const els = {
 function setView(view) {
   els.homeView.classList.toggle('active', view === 'home');
   els.chatView.classList.toggle('active', view === 'chat');
+  if (view === 'chat') els.textInput.focus();
 }
 
 function setStatusLine(text) {
