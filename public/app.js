@@ -73,7 +73,6 @@ const els = {
   chatView: document.getElementById('chatView'),
   dropOverlay: document.getElementById('dropOverlay'),
   showCreateBtn: document.getElementById('showCreateBtn'),
-  showJoinBtn: document.getElementById('showJoinBtn'),
   createPanel: document.getElementById('createPanel'),
   joinPanel: document.getElementById('joinPanel'),
   sessionCode: document.getElementById('sessionCode'),
@@ -492,11 +491,6 @@ els.showCreateBtn.addEventListener('click', async () => {
   setDot('red');
 });
 
-els.showJoinBtn.addEventListener('click', () => {
-  els.joinPanel.classList.remove('hidden');
-  els.createPanel.classList.add('hidden');
-});
-
 els.joinBtn.addEventListener('click', () => {
   const code = els.joinCode.value.trim().toUpperCase();
   if (!code) return;
@@ -671,6 +665,8 @@ els.backBtn.addEventListener('click', async () => {
   els.chatSessionCode.textContent = '-';
   clearStoredState();
   updateUrl(null);
+  els.createPanel.classList.add('hidden');
+  els.joinPanel.classList.remove('hidden');
   setView('home');
 });
 

@@ -13,12 +13,11 @@
         <div class="hero">
           <img src="/logo.png" alt="Clipboard Bridge" class="hero-logo" />
           <h1>Clipboard Bridge</h1>
-          <p>Start by creating a session or joining one with a unique key.</p>
+          <p>Create a session to share clipboard and files.</p>
         </div>
 
         <div class="action-grid">
           <button id="showCreateBtn" class="action-card create">Create Session</button>
-          <button id="showJoinBtn" class="action-card join">Join Session</button>
         </div>
 
         <section id="createPanel" class="panel hidden">
@@ -28,7 +27,7 @@
           <div id="qrBox" class="qr-box"></div>
         </section>
 
-        <section id="joinPanel" class="panel hidden">
+        <section id="joinPanel" class="panel">
           <h2>Join with Key</h2>
           <label for="joinCode">Unique Key</label>
           <input id="joinCode" type="text" placeholder="e.g. A1B2C3D4" />
