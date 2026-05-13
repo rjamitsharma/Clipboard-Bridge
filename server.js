@@ -48,7 +48,7 @@ app.get(['/', '/index.html'], (req, res) => {
   let html = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
   html = html
     .replace(/(href|src)="\/([^"?]*\.(css|js|png|ico|svg))/g, `$1="/$2?v=${STATIC_VERSION}`)
-    .replace('id="appVersion"></span>', `id="appVersion">v.${STATIC_VERSION}</span>`);
+    .replace('id="appVersion"></span>', `id="appVersion">v.1.${STATIC_VERSION}</span>`);
   res.type('html').send(html);
 });
 
