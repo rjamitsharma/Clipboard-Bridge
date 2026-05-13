@@ -42,19 +42,14 @@ setInterval(() => {
 }, 120000);
 
 app.use(express.json({ limit: '100mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
-app.use((req, res, next) => {
-  const originalSend = res.send.bind(res);
-  res.send = function (body) {
-    if (typeof body === 'string' && res.get('Content-Type')?.includes('text/html')) {
-      body = body
-        .replace(/(href|src)="\/([^"?]*\.(css|js|png|ico|svg))/g, `$1="/$2?v=${STATIC_VERSION}`)
-        .replace('id="appVersion"></span>', `id="appVersion">v.${STATIC_VERSION}</span>`);
-    }
-    return originalSend(body);
-  };
-  next();
+app.get(['/', '/index.html'], (req, res) => {
+  let html = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
+  html = html
+    .replace(/(href|src)="\/([^"?]*\.(css|js|png|ico|svg))/g, `$1="/$2?v=${STATIC_VERSION}`)
+    .replace('id="appVersion"></span>', `id="appVersion">v.${STATIC_VERSION}</span>`);
+  res.type('html').send(html);
 });
 
 app.get('/api/session', (req, res) => {
